@@ -8,20 +8,26 @@ function SettingsPage({swal}) {
   const [products, setProducts] = useState([]);
   const [featuredProductId, setFeaturedProductId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [shippingFee, setShippingFee] = useState('');
 
   useEffect(() => {
     setIsLoading(true);
-    axios.get('/api/products').then(res => {
-        setProducts(res.data);
-        setIsLoading(false);
-        axios.get('/api/products').then(res => {
-            setProducts(res.data);
-          });
-        axios.get('/api/settings?name=featuredProductId').then(res => {
-            setFeaturedProductId(res.data.value);
-          });
+    fetchAll().then(() => {
+      setIsLoading(false);
     });
   }, []);
+
+  async function fetchAll() {
+    await axios.get('/api/products').then(res => {
+      setProducts(res.data);
+    });
+    await axios.get('/api/settings?name=featuredProductId').then(res => {
+      setFeaturedProductId(res.data.value);
+    });
+    await axios.get('/api/settings?name=shippingFee').then(res => {
+      setShippingFee(res.data.value);
+    });
+  }
 
 
   async function saveSettings() {
@@ -29,6 +35,10 @@ function SettingsPage({swal}) {
     await axios.put('/api/settings', {
       name: 'featuredProductId',
       value: featuredProductId,
+    });
+    await axios.put('/api/settings', {
+      name: 'shippingFee',
+      value: shippingFee,
     });
     setIsLoading(false);
     await swal.fire({
@@ -51,6 +61,10 @@ function SettingsPage({swal}) {
               <option value={product._id}>{product.title}</option>
             ))}
           </select>
+          <label>Shipping price (in USD)</label>
+          <input type="number"
+                value={shippingFee}
+                onChange={ev => setShippingFee(ev.target.value)}/>
           <div>
             <button onClick={saveSettings} className="btn-primary">Save settings</button>
           </div>
